@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <title>途景</title>
+
+  <!-- 1. loading 样式：完全贴合 #app 尺寸 -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
+    ::selection {
+      background: #7AB8F7;
+      color: #ffffff;
+    }
+
+    #app {
+      overflow-y: auto;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #dedede;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #37373789;
+      border-radius: 6px;
+      border: #dedede 3px solid;
+    }
+
+    /* 占位层：与 #app 同大小、同位置 */
+    #app-loading {
+      position: absolute;
+      /* 不占文档流，避免抖动 */
+      inset: 0;
+      /* 上下左右 0，自动撑满 #app */
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      /* 盖住未挂载的 #app */
+      transition: opacity .4s;
+      filter: contrast(20);
+    }
+
+    .load {
+      margin: auto;
+      font-weight: 700;
+      font-family: 'Ubuntu', sans-serif;
+    }
+
+    /* 缩放容器：用 transform 把 600px 设计稿缩放到 #app 实际大小 */
+    #app-loading .scale-box {
+      /* 以设计稿 600px 为基准，等比缩放 */
+      width: 100%;
+      height: 100%;
+      transform-origin: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: contrast(20);
+    }
+
+    /* 双球动画照搬，单位保持 30px 不变 */
+    .box1,
+    .box2 {
+      width: 30px;
+      height: 30px;
+      background: #000000;
+      border-radius: 25%;
+      filter: blur(5px);
+      animation: 0.7s cubic-bezier(.42, 0, .58, 1) infinite alternate;
+      z-index: 9999;
+    }
+
+    .box1 {
+      transform-origin: left top;
+      animation-name: am1;
+    }
+
+    .box2 {
+      transform-origin: right top;
+      animation-name: am2;
+    }
+
+    @keyframes am1 {
+      from {
+        transform: rotate(-45deg) translateX(15px);
+      }
+
+      to {
+        transform: rotate(90deg) translateX(-0.1px);
+      }
+    }
+
+    @keyframes am2 {
+      from {
+        transform: rotate(45deg) translateX(-15px);
+      }
+
+      to {
+        transform: rotate(-90deg) translateX(0.1px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 原始结构，零改动 -->
+  <div id="app"></div>
+  <div id="app-loading">
+    <div class="scale-box">
+      <div class="box1"></div>
+      <div class="box2"></div>
+    </div>
+    <div class="load">Loading......</div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+
+  <!-- 2. loading 节点：直接放在 #app 内部，尺寸自动跟随 -->
+
+
+  <!-- 3. 计算缩放比 & 淡出 -->
+  <script>
+    (function () {
+      const box = document.querySelector('#app-loading .scale-box');
+      const loading = document.getElementById('app-loading');
+
+      function updateScale() {
+        const { clientWidth: w, clientHeight: h } = document.getElementById('app');
+        const scale = Math.min(w / 600, h / 600, 1);
+        box.style.setProperty('--scale', scale);
+      }
+      updateScale();
+      window.addEventListener('resize', updateScale);
+
+      /* 3. 等 Vue 挂载完再淡出，而不是 DOMContentLoaded */
+      const observer = new MutationObserver(() => {
+        if (document.querySelector('#app').children.length > 1) { // Vue 已挂载
+          loading.style.opacity = '0';
+          setTimeout(() => loading.remove(), 400);
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.getElementById('app'), { childList: true });
+    })();
+  </script>
+</body>
+
+</html>
